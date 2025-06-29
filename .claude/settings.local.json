@@ -4,7 +4,8 @@
       "Bash(find:*)",
       "Bash(python -m pytest tests/test_parser.py -v)",
       "Bash(pip3 install:*)",
-      "Bash(python3 -m pytest tests/test_parser.py -v)"
+      "Bash(python3 -m pytest tests/test_parser.py -v)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }
