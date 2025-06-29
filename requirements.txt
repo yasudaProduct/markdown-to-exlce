@@ -1,0 +1,6 @@
+pandas==2.1.0
+openpyxl==3.1.2
+markdown==3.5.1
+click==8.1.7
+pytest==7.4.0
+pytest-cov==4.1.0
