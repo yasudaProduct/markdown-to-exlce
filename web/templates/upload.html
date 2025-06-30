@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}単一ファイル変換 - Markdown to Excel Converter{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="text-center mb-4">
+            <h2>
+                <i class="fas fa-file-upload text-primary me-2"></i>
+                単一ファイル変換
+            </h2>
+            <p class="text-muted">
+                MarkdownファイルをアップロードしてExcelファイルに変換
+            </p>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <!-- ファイル選択 -->
+                    <div class="mb-4">
+                        <label for="file" class="form-label">
+                            <i class="fas fa-file-alt me-1"></i>
+                            Markdownファイル (.md, .markdown)
+                        </label>
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="file" name="file" 
+                                   accept=".md,.markdown" required>
+                            <span class="input-group-text">
+                                <i class="fas fa-paperclip"></i>
+                            </span>
+                        </div>
+                        <div class="form-text">
+                            最大ファイルサイズ: 16MB
+                        </div>
+                    </div>
+
+                    <!-- ドラッグ&ドロップエリア -->
+                    <div class="mb-4">
+                        <div id="dropZone" class="border border-2 border-dashed border-secondary rounded p-4 text-center">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">
+                                ファイルをここにドラッグ&ドロップ<br>
+                                または上の「ファイルを選択」ボタンをクリック
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- オプション設定 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-cog me-1"></i>
+                                変換オプション
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="apply_formatting" name="apply_formatting" checked>
+                                        <label class="form-check-label" for="apply_formatting">
+                                            <i class="fas fa-paint-brush text-success me-1"></i>
+                                            フォーマット適用
+                                        </label>
+                                        <div class="form-text">
+                                            ヘッダーを太字にし、アライメントを設定
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="auto_adjust_width" name="auto_adjust_width" checked>
+                                        <label class="form-check-label" for="auto_adjust_width">
+                                            <i class="fas fa-expand-arrows-alt text-warning me-1"></i>
+                                            列幅自動調整
+                                        </label>
+                                        <div class="form-text">
+                                            内容に応じて列幅を自動調整
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 送信ボタン -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="fas fa-magic me-2"></i>
+                            Excelファイルに変換
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            戻る
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- プレビューエリア -->
+        <div class="card mt-4" id="previewCard" style="display: none;">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-eye me-1"></i>
+                    ファイルプレビュー
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>ファイル名:</strong> <span id="fileName"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>サイズ:</strong> <span id="fileSize"></span>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <strong>内容プレビュー:</strong>
+                    <pre id="filePreview" class="bg-light p-3 rounded mt-2" style="max-height: 200px; overflow-y: auto;"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用方法 -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-1"></i>
+                    使用方法
+                </h6>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Markdownファイル（.md または .markdown）を選択</li>
+                    <li>必要に応じて変換オプションを設定</li>
+                    <li>「Excelファイルに変換」ボタンをクリック</li>
+                    <li>変換完了後、自動でダウンロードが開始されます</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('file');
+    const dropZone = document.getElementById('dropZone');
+    const previewCard = document.getElementById('previewCard');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const filePreview = document.getElementById('filePreview');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // ドラッグ&ドロップ処理
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('border-primary', 'bg-light');
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary', 'bg-light');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-primary', 'bg-light');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            showPreview(files[0]);
+        }
+    });
+
+    // ファイル選択時のプレビュー
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            showPreview(e.target.files[0]);
+        }
+    });
+
+    // ファイルプレビュー表示
+    function showPreview(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            filePreview.textContent = content.length > 1000 ? 
+                content.substring(0, 1000) + '\n...' : content;
+        };
+        reader.readAsText(file);
+        
+        previewCard.style.display = 'block';
+    }
+
+    // ファイルサイズフォーマット
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // フォーム送信時の処理
+    uploadForm.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>変換中...';
+    });
+});
+</script>
+{% endblock %}
